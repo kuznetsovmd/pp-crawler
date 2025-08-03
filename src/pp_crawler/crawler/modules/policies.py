@@ -75,7 +75,9 @@ class Policies(Module):
 
         ws_cache = dict()
         for models in chunked(skipped_iter, self.chunk_size):
-            new_websites = [m.website for m in models if m.website and m.website not in ws_cache]
+            new_websites = [
+                m.website for m in models if m.website and m.website not in ws_cache
+            ]
 
             for website, policy in pool.imap(search_func, new_websites):
                 ws_cache[website] = policy

@@ -23,7 +23,7 @@ class Item(ABC):
         pass
 
     @abstractmethod
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         pass
 
     @abstractmethod

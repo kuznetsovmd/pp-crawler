@@ -12,10 +12,10 @@ class Website(Item):
     policy: Optional[str] = None
     hash: Optional[str] = None
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.website)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, self.__class__) and self.website == other.website
 
     def to_json(self) -> str:

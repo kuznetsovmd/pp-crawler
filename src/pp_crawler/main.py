@@ -3,6 +3,7 @@ import json
 import sys
 from multiprocessing import Pool, Process, Queue
 from pprint import pprint
+from typing import Any
 
 from pp_crawler.core.config import Config
 from pp_crawler.core.functions import get_logger, init_files, load_constructor
@@ -10,7 +11,7 @@ from pp_crawler.core.pool import init_logger, logger_initializer, worker_constru
 from pp_crawler.crawler.web.driver import Driver
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(
         prog="pp_crawler",
         description="Command line tool to control web crawling framework",
@@ -31,7 +32,7 @@ def main():
     pprint(c)
     init_files(c.path)
 
-    queue = Queue(-1)
+    queue: Queue[Any] = Queue(-1)
     logger_process = Process(target=logger_initializer, args=(queue,))
     logger_process.start()
 

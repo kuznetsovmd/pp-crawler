@@ -17,7 +17,7 @@ class PathConfig:
         html_path: str,
         explicit_file: str,
         descriptor_file: str,
-        **kwargs,
+        **kwargs: Any,
     ) -> "PathConfig":
         r = Path(resources_path).expanduser()
         transformed = {
@@ -40,17 +40,14 @@ class DriverConfig:
     private: bool = True
     no_cache: bool = True
     headless: bool = True
-    use_proxy: bool = False
     page_load_timeout: int = 30
     max_error_attempts: int = 10
     max_captcha_attempts: int = 10
     max_timeout_attempts: int = 10
-    proxies_from_conf: bool = False
-    proxies: list[str] = field(default_factory=list)
     user_agents: list[str] = field(default_factory=list)
 
     @staticmethod
-    def build(**kwargs) -> "DriverConfig":
+    def build(**kwargs: Any) -> "DriverConfig":
         return DriverConfig(**kwargs)
 
 
@@ -66,7 +63,7 @@ class Config:
         path: dict[str, str],
         driver: dict[str, Any],
         proc_count: int = -1,
-        **kwargs,
+        **kwargs: Any,
     ) -> "Config":
         transformed = {
             **kwargs,

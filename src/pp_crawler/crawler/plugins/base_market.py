@@ -132,7 +132,9 @@ class BaseMarket(Plugin):
         for product in pool.imap(manufacturer_func, skipped_iter):
             write_models(tmp2, [product], mode="a")
 
-        for i, model in enumerate(read_models(tmp1, Product), start=int(desc_id or 0) + 1):
+        for i, model in enumerate(
+            read_models(tmp1, Product), start=int(desc_id or 0) + 1
+        ):
             model.id = i
             write_models(tmp2, [model], mode="a")
 

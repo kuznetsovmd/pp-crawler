@@ -1,5 +1,6 @@
 import re
 from difflib import SequenceMatcher
+from typing import Optional
 
 from bs4 import BeautifulSoup, Tag
 from selenium.webdriver.common.by import By
@@ -24,7 +25,7 @@ class GoogleEngine(Engine):
         self.regex_href = re.compile(r"^((https?://)?(www\.)?([\w.\-_]+)(\.\w+)).*$")
         self.regex_request = re.compile(r"[^\w ]+|\s{2,}")
 
-    def search(self, manufacturer, keyword):
+    def search(self, manufacturer: str, keyword: str) -> Optional[str]:
         driver = Driver.spawn()
         driver.get("https://www.google.com")
 
@@ -38,12 +39,14 @@ class GoogleEngine(Engine):
             return None
 
         body = BeautifulSoup(markup, "lxml").find("body")
-        if not body:
+        if not isinstance(body, Tag):
             return None
 
         return self.similarity_filter(manufacturer, body, threshold=self.similarity)
 
-    def similarity_filter(self, content: str, body: Tag, threshold: float = 0.6):
+    def similarity_filter(
+        self, content: str, body: Tag, threshold: float = 0.6
+    ) -> Optional[str]:
         best_url = None
         best_similarity = threshold
 
@@ -59,9 +62,11 @@ class GoogleEngine(Engine):
             domain = m.group(4)
             for piece in content_list:
                 sim = SequenceMatcher(None, piece, domain).ratio()
-                if sim > best_similarity or domain in piece:
-                    w3 = m.group(3) or ""
-                    best_url = f"http://{w3}{domain}{m.group(5)}"
-                    best_similarity = sim
+                if not (sim <= best_similarity and domain not in piece):
+                    return best_url
+
+                w3 = m.group(3) or ""
+                best_url = f"http://{w3}{domain}{m.group(5)}"
+                best_similarity = sim
 
         return best_url

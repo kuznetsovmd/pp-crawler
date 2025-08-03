@@ -1,3 +1,4 @@
+# mypy: disable-error-code=no-untyped-call
 import os
 import random
 import tempfile
@@ -21,7 +22,6 @@ from webdriver_manager.firefox import GeckoDriverManager
 
 from pp_crawler.core.config import DriverConfig
 from pp_crawler.core.exceptions import CaptchaException
-from pp_crawler.crawler.web.proxy import Proxy
 
 
 def inject_js(filename: str) -> str:
@@ -45,11 +45,12 @@ class _DriverInstance:
         os.makedirs(conf.temp_dir, exist_ok=True)
         self._driver = self.make_driver(conf)
 
-    def make_driver(self, conf: DriverConfig):
+    def make_driver(self, conf: DriverConfig) -> webdriver.Firefox:
         profile = None
         if conf.profile_path:
             self.logger.info(f"Using profile: {conf.profile_path}")
             profile = webdriver.FirefoxProfile(conf.profile_path)
+
         else:
             self.logger.warning("Using temporary profile")
             profile = webdriver.FirefoxProfile()
@@ -62,24 +63,12 @@ class _DriverInstance:
             profile.set_preference("dom.webdriver.enabled", False)
             profile.set_preference("marionette.enabled", False)
 
-        if conf.use_proxy:
-            proxy = Proxy.spawn(conf.proxies, conf.proxies_from_conf)
-            http, port = proxy.get_proxy()
-
-            self.logger.info(f"Switching to {http}:{port} proxy")
-
-            profile.set_preference("network.proxy.type", 1)
-            profile.set_preference("network.proxy.http", http)
-            profile.set_preference("network.proxy.http_port", port)
-            profile.set_preference("network.proxy.ssl", http)
-            profile.set_preference("network.proxy.ssl_port", port)
-            profile.set_preference("network.proxy.ftp", http)
-            profile.set_preference("network.proxy.ftp_port", port)
-
         if conf.private:
             profile.set_preference("browser.privatebrowsing.autostart", True)
 
-        profile.set_preference("general.useragent.override", random.choice(conf.user_agents))
+        profile.set_preference(
+            "general.useragent.override", random.choice(conf.user_agents)
+        )
         profile.set_preference("intl.accept_languages", "en-US, en")
         profile.update_preferences()
 
@@ -98,7 +87,9 @@ class _DriverInstance:
             self.logger.error(f"Dotfile with executable path not found: {conf.dotfile}")
             raise
 
-        service = Service(executable_path=executable_path, log_output=str(conf.log_path))
+        service = Service(
+            executable_path=executable_path, log_output=str(conf.log_path)
+        )
 
         driver = webdriver.Firefox(options=options, service=service)
         driver.set_page_load_timeout(conf.page_load_timeout)
@@ -136,7 +127,9 @@ class _DriverInstance:
                     pass
 
                 try:
-                    self._driver.find_element(By.XPATH, "//iframe[contains(@src, 'recaptcha')]")
+                    self._driver.find_element(
+                        By.XPATH, "//iframe[contains(@src, 'recaptcha')]"
+                    )
                     captcha_error += 1
                     raise CaptchaException
                 except NoSuchElementException:
@@ -154,7 +147,9 @@ class _DriverInstance:
                 timeout_error += 1
 
             except WebDriverException:
-                self.logger.warning(f"Web driver exception, potentially net error, retying {url}")
+                self.logger.warning(
+                    f"Web driver exception, potentially net error, retying {url}"
+                )
                 self._driver.quit()
                 self._driver = self.make_driver(self._conf)
                 network_error += 1
@@ -178,7 +173,7 @@ class _DriverInstance:
             return True
         except TimeoutException:
             self.logger.warning("Wait timeout")
-            return False
+        return False
 
     def find_element(self, by: str, value: str | None) -> WebElement:
         return self._driver.find_element(by, value)
@@ -188,7 +183,6 @@ class _DriverInstance:
 
     def quit(self) -> None:
         self._driver.quit()
-        self._driver = None
         self.logger.info("Driver has been closed")
 
 
@@ -197,7 +191,7 @@ class Driver:
     _config: Optional[DriverConfig] = None
 
     @classmethod
-    def spawn(cls, *args, **kwargs) -> _DriverInstance:
+    def spawn(cls, *args: Any, **kwargs: Any) -> _DriverInstance:
         if cls._instance:
             return cls._instance
         if cls._config:

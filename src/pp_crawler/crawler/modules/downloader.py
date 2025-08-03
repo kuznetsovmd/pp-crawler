@@ -2,7 +2,7 @@ from functools import partial
 from hashlib import md5
 from multiprocessing.pool import Pool
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Type
 
 from bs4 import BeautifulSoup, Tag
 
@@ -16,6 +16,7 @@ from pp_crawler.core.functions import (
     temp_descriptor,
     write_models,
 )
+from pp_crawler.crawler.item import Item
 from pp_crawler.crawler.modules.module import Module
 from pp_crawler.crawler.web.driver import Driver
 
@@ -56,7 +57,14 @@ def download_and_hash(policy: str, html_dir: Path) -> tuple[str, Optional[str]]:
 
 
 class Downloader(Module):
-    def __init__(self, cls, descriptor, explicit, html, chunk_size=64):
+    def __init__(
+        self,
+        cls: Type[Item],
+        descriptor: Path,
+        explicit: Path,
+        html: Path,
+        chunk_size: int = 64,
+    ):
         self.cls = cls
         self.descriptor = descriptor
         self.explicit = explicit
@@ -80,7 +88,9 @@ class Downloader(Module):
 
         p_cache = dict()
         for models in chunked(skipped_iter, self.chunk_size):
-            new_policies = [m.policy for m in models if m.policy and m.policy not in p_cache]
+            new_policies = [
+                m.policy for m in models if m.policy and m.policy not in p_cache
+            ]
 
             for policy, content_hash in pool.imap(worker_func, new_policies):
                 p_cache[policy] = content_hash

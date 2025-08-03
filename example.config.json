@@ -15,19 +15,11 @@
         "private": true,
         "no_cache": true,
         "headless": true,
-        "use_proxy": false,
         "page_load_timeout": 30,
         "max_error_attempts": 3,
         "max_captcha_attempts": 3,
         "max_timeout_attempts": 3,
         "log_path": ".geckodriver.log",
-        "proxies_from_conf": true,
-        "proxies": [
-            "37.135.121.10:80",
-            "104.248.90.212:80",
-            "50.206.25.111:80",
-            "139.162.78.109:3128"
-        ],
         "user_agents": [
             "Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36",
