@@ -69,6 +69,7 @@ def logger_initializer(queue):
 
 
 def main():
+    default_stderr = sys.stderr
     sys.stderr = open(".stderr.log", "a", buffering=1)
 
     parser = argparse.ArgumentParser(
@@ -109,13 +110,15 @@ def main():
         for m in pipeline(c):
             m.run(p)
         p.close()
+        return 0
 
     except KeyboardInterrupt:
         logger.info("Keyboard interruption, closing gracefully")
         p.terminate()
-        raise
+        return 130
 
     except Exception:
+        sys.stderr = default_stderr
         p.terminate()
         raise
 
@@ -126,15 +129,6 @@ def main():
         queue.put_nowait(None)
         logger_process.join()
 
-    return 0
-
 
 if __name__ == "__main__":
-    default_stderr = sys.stderr
-    try:
-        sys.exit(main())
-    except KeyboardInterrupt:
-        sys.exit(130)
-    except Exception:
-        sys.stderr = default_stderr
-        raise
+    sys.exit(main())
