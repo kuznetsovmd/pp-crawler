@@ -62,8 +62,8 @@ def main():
         return 130
 
     except Exception:
-        sys.stderr = default_stderr
         p.terminate()
+        sys.stderr = default_stderr
         raise
 
     finally:
