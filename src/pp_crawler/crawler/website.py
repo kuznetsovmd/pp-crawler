@@ -15,7 +15,7 @@ class Website(Item):
     def __hash__(self):
         return hash(self.website)
 
-    def __eq__(self, other: "Website"):
+    def __eq__(self, other):
         return isinstance(other, self.__class__) and self.website == other.website
 
     def to_json(self) -> str:

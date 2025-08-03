@@ -1,9 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional, ClassVar, TypeVar
-
-
-T = TypeVar("T", bound="Item")
+from typing import ClassVar, Optional
 
 
 @dataclass
@@ -11,7 +8,7 @@ class Item(ABC):
     _counter: ClassVar[int] = 0
 
     id: Optional[int] = None
-    page: Optional[int] = None
+    page: Optional[str] = None
 
     def __post_init__(self):
         cls = self.__class__
@@ -26,13 +23,14 @@ class Item(ABC):
         pass
 
     @abstractmethod
-    def __eq__(self, other: T):
+    def __eq__(self, other):
         pass
 
     @abstractmethod
     def to_json(self) -> str:
         pass
 
+    @classmethod
     @abstractmethod
-    def from_json(self, data: str) -> T:
+    def from_json(cls, data: str) -> "Item":
         pass

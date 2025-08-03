@@ -1,12 +1,10 @@
-from pathlib import Path
 from functools import partial
 from multiprocessing.pool import Pool
-from typing import Callable
+from pathlib import Path
+from typing import Callable, Optional
 
-from bs4 import BeautifulSoup
+from bs4 import Tag
 
-from pp_crawler.crawler.plugins.plugin import Plugin
-from pp_crawler.crawler.product import Product
 from pp_crawler.core.functions import (
     concat_files,
     gen_search_urls,
@@ -18,16 +16,22 @@ from pp_crawler.core.functions import (
     temp_descriptor,
     write_models,
 )
+from pp_crawler.crawler.plugins.plugin import Plugin
+from pp_crawler.crawler.product import Product
 
 
 def find_product_links(
     data: tuple[str, str],
-    template: Callable[[BeautifulSoup], list[str]],
+    template: Callable[[Tag], list[str]],
     cooldown: float = 0.0,
     random_cooldown: float = 0.0,
 ) -> tuple[str, str, set[str]]:
     url, keyword = data
     logger = get_logger()
+
+    if not url:
+        return keyword, url, set()
+
     soup = get_soup_from_url(url, cooldown, random_cooldown)
     if not soup:
         return keyword, url, set()
@@ -41,11 +45,15 @@ def find_product_links(
 
 def find_manufacturer(
     product: Product,
-    templates: tuple[Callable[[BeautifulSoup], str], ...],
+    templates: list[Callable[[Tag], Optional[str]]],
     cooldown: float = 0.0,
     random_cooldown: float = 0.0,
 ) -> Product:
     logger = get_logger()
+
+    if not product.url:
+        return product
+
     soup = get_soup_from_url(product.url, cooldown, random_cooldown)
     if not soup:
         return product
@@ -63,11 +71,11 @@ class BaseMarket(Plugin):
     def __init__(
         self,
         search_url: str,
-        product_template: Callable[[BeautifulSoup], list[str]],
-        templates: tuple[Callable[[BeautifulSoup], list[str]], ...],
-        keywords: list[str],
+        product_template: Callable[[Tag], list[str]],
+        templates: list[Callable[[Tag], Optional[str]]],
+        keywords: list[Optional[str]],
         pages: int,
-        descriptor: str,
+        descriptor: Path,
         chunk_size: int = 64,
         cooldown: float = 0.0,
         random_cooldown: float = 0.0,

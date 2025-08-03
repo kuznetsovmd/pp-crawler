@@ -4,5 +4,5 @@ from multiprocessing.pool import Pool
 
 class Plugin(ABC):
     @abstractmethod
-    def scrap_records(self, pool: Pool = None) -> None:
+    def scrap_records(self, pool: Pool) -> None:
         pass

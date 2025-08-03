@@ -1,12 +1,8 @@
-
-from pathlib import Path
 from functools import partial
 from multiprocessing.pool import Pool
-from typing import TypeVar
+from pathlib import Path
+from typing import Optional, TypeVar
 
-from pp_crawler.crawler.item import Item
-from pp_crawler.crawler.modules.module import Module
-from pp_crawler.core.link_matcher import LinkMatcher
 from pp_crawler.core.functions import (
     chunked,
     concat_files,
@@ -18,7 +14,9 @@ from pp_crawler.core.functions import (
     temp_descriptor,
     write_models,
 )
-
+from pp_crawler.core.link_matcher import LinkMatcher
+from pp_crawler.crawler.item import Item
+from pp_crawler.crawler.modules.module import Module
 
 T = TypeVar("T", bound=Item)
 
@@ -28,7 +26,7 @@ def find_policy(
     link_matcher: LinkMatcher,
     cooldown: float = 0.0,
     random_cooldown: float = 0.0,
-) -> tuple[str, str]:
+) -> tuple[str, Optional[str]]:
     soup = get_soup_from_url(url, cooldown, random_cooldown)
     if not soup:
         return url, None
@@ -57,7 +55,7 @@ class Policies(Module):
         self.random_cooldown = random_cooldown
         self.chunk_size = chunk_size
 
-    def run(self, pool: Pool = None):
+    def run(self, pool: Pool) -> None:
         get_logger().info("Searching policies")
 
         tmp1 = temp_descriptor(self.descriptor, self.__class__.__name__, "cache")

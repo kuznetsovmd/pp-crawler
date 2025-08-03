@@ -1,13 +1,13 @@
-import os
-import json
-import shutil
-import logging
 import importlib
+import json
+import logging
+import os
+import shutil
 from pathlib import Path
-from typing import Any, Callable, Generator, Iterable, Iterator, Optional, Type, TypeVar
+from typing import Any, Callable, Generator, Iterable, Iterator, Optional, Type
 
-from bs4 import BeautifulSoup
-from file_read_backwards import FileReadBackwards
+from bs4 import BeautifulSoup, Tag
+from file_read_backwards import FileReadBackwards  # type: ignore
 
 from pp_crawler.core.config import Config, PathConfig
 from pp_crawler.crawler.item import Item
@@ -15,15 +15,11 @@ from pp_crawler.crawler.modules.module import Module
 from pp_crawler.crawler.web.driver import Driver
 
 
-TItem = TypeVar("TItem", bound="Item")
-TModule = TypeVar("TModule", bound="Module")
-
-
 def get_logger():
     return logging.getLogger(f"pid={os.getpid()}")
 
 
-def read_models(descriptor: Path, cls: Type[TItem]) -> Generator[TItem, None, None]:
+def read_models(descriptor: Path, cls: Type[Item]) -> Generator[Item, None, None]:
     with descriptor.open("r", encoding="utf-8") as d:
         for line in d:
             line = line.strip()
@@ -66,17 +62,18 @@ def concat_files(
 
 def get_soup_from_url(
     url: str, cooldown: float = 0.0, random_cooldown: float = 0.0
-) -> Optional[BeautifulSoup]:
-    driver = Driver()
+) -> Optional[Tag]:
+    driver = Driver.spawn()
     driver.get(url, cooldown=cooldown, random_cooldown=random_cooldown)
     markup = driver.source()
     if not markup:
         return None
-    return BeautifulSoup(markup, "lxml").find("body")
+    body = BeautifulSoup(markup, "lxml").find("body")
+    return body if isinstance(body, Tag) else None
 
 
 def gen_search_urls(
-    template: str, keywords: Iterable[str], pages: int
+    template: str, keywords: list[Optional[str]], pages: int
 ) -> Iterator[tuple[str, Optional[str]]]:
     for keyword in keywords:
         for page in range(1, pages + 1):
@@ -121,7 +118,7 @@ def init_files(paths: PathConfig) -> None:
         )
 
 
-def load_constructor(pipeline: str) -> Callable[[Config], list[TModule]]:
-    module_name, obj_name = f"pipelines.{pipeline}.pipeline".rsplit(".", 1)
+def load_constructor(pipeline: str) -> Callable[[Config], list[Module]]:
+    module_name, obj_name = f"pp_crawler.pipelines.{pipeline}.pipeline".rsplit(".", 1)
     module = importlib.import_module(module_name)
     return getattr(module, obj_name)

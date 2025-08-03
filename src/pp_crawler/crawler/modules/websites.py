@@ -1,11 +1,8 @@
-from pathlib import Path
 from functools import partial
 from multiprocessing.pool import Pool
-from typing import TypeVar
+from pathlib import Path
+from typing import Optional
 
-from pp_crawler.crawler.engines.engine import Engine
-from pp_crawler.crawler.modules.module import Module
-from pp_crawler.crawler.product import Product
 from pp_crawler.core.functions import (
     chunked,
     concat_files,
@@ -16,23 +13,21 @@ from pp_crawler.core.functions import (
     temp_descriptor,
     write_models,
 )
-
-
-T = TypeVar("T", bound=Engine)
+from pp_crawler.crawler.engines.engine import Engine
+from pp_crawler.crawler.modules.module import Module
+from pp_crawler.crawler.product import Product
 
 
 def search_website(
     data: tuple[str, str],
-    engines: list[T],
-    cooldown: float = 2.0,
-    random_cooldown: float = 2.0,
-) -> tuple[str, str]:
+    engines: list[Engine],
+) -> tuple[str, Optional[str]]:
     manufacturer, keyword = data
 
     logger = get_logger()
 
     for engine in engines:
-        if site := engine.search(manufacturer, keyword, cooldown, random_cooldown):
+        if site := engine.search(manufacturer, keyword):
             logger.info(f"Found website: {site}")
             return manufacturer, site
 
@@ -43,7 +38,7 @@ class Websites(Module):
     def __init__(
         self,
         descriptor: Path,
-        engines: list[T],
+        engines: list[Engine],
         cooldown: float = 0.0,
         random_cooldown: float = 0.0,
         chunk_size: int = 64,
@@ -54,7 +49,7 @@ class Websites(Module):
         self.random_cooldown = random_cooldown
         self.chunk_size = chunk_size
 
-    def run(self, pool: Pool = None) -> None:
+    def run(self, pool: Pool) -> None:
         get_logger().info("Searching websites")
 
         tmp1 = temp_descriptor(self.descriptor, self.__class__.__name__, "cache")
@@ -63,8 +58,6 @@ class Websites(Module):
         search_func = partial(
             search_website,
             engines=self.engines,
-            cooldown=self.cooldown,
-            random_cooldown=self.random_cooldown,
         )
 
         last_id, _ = load_last_id_page(tmp1)

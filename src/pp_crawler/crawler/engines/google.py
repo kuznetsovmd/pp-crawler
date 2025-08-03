@@ -1,7 +1,7 @@
 import re
 from difflib import SequenceMatcher
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as ec
@@ -11,7 +11,12 @@ from pp_crawler.crawler.web.driver import Driver
 
 
 class GoogleEngine(Engine):
-    def __init__(self, similarity_threshold=0.6, cooldown=0.0, random_cooldown=0.0):
+    def __init__(
+        self,
+        similarity_threshold: float = 0.6,
+        cooldown: float = 0.0,
+        random_cooldown: float = 0.0,
+    ):
         super().__init__()
         self.cooldown = cooldown
         self.random_cooldown = random_cooldown
@@ -20,7 +25,7 @@ class GoogleEngine(Engine):
         self.regex_request = re.compile(r"[^\w ]+|\s{2,}")
 
     def search(self, manufacturer, keyword):
-        driver = Driver()
+        driver = Driver.spawn()
         driver.get("https://www.google.com")
 
         search = driver.find_element(By.NAME, "q")
@@ -32,13 +37,13 @@ class GoogleEngine(Engine):
         if not markup:
             return None
 
-        soup = BeautifulSoup(markup, "lxml").body
-        if not soup:
+        body = BeautifulSoup(markup, "lxml").find("body")
+        if not body:
             return None
 
-        return self.similarity_filter(manufacturer, soup, threshold=self.similarity)
+        return self.similarity_filter(manufacturer, body, threshold=self.similarity)
 
-    def similarity_filter(self, content, soup, threshold=0.6):
+    def similarity_filter(self, content: str, body: Tag, threshold: float = 0.6):
         best_url = None
         best_similarity = threshold
 
@@ -46,7 +51,7 @@ class GoogleEngine(Engine):
         if len(content_list) > 1:
             content_list.append("".join(content_list))
 
-        for cite in soup.find_all("cite"):
+        for cite in body.find_all("cite"):
             m = self.regex_href.match(cite.text)
             if not m:
                 break

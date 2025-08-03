@@ -1,21 +1,16 @@
 import argparse
 import json
 import sys
+from multiprocessing import Pool, Process, Queue
 from pprint import pprint
-from multiprocessing import Queue
-from multiprocessing import Process
-from multiprocessing import Pool
 
+from pp_crawler.core.config import Config
+from pp_crawler.core.functions import get_logger, init_files, load_constructor
 from pp_crawler.core.pool import init_logger, logger_initializer, worker_constructor
 from pp_crawler.crawler.web.driver import Driver
-from pp_crawler.core.functions import get_logger, init_files, load_constructor
-from pp_crawler.core.config import Config
 
 
 def main():
-    default_stderr = sys.stderr
-    sys.stderr = open(".stderr.log", "a", buffering=1)
-
     parser = argparse.ArgumentParser(
         prog="pp_crawler",
         description="Command line tool to control web crawling framework",
@@ -63,7 +58,6 @@ def main():
 
     except Exception:
         p.terminate()
-        sys.stderr = default_stderr
         raise
 
     finally:
@@ -75,4 +69,9 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    default_stderr = sys.stderr
+    try:
+        sys.exit(main())
+    except:
+        sys.stderr = default_stderr
+        raise

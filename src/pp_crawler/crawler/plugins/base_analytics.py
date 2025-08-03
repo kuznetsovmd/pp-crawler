@@ -1,12 +1,10 @@
-from pathlib import Path
 from functools import partial
 from multiprocessing.pool import Pool
+from pathlib import Path
 from typing import Callable, Optional
 
-from bs4 import BeautifulSoup
+from bs4 import Tag
 
-from pp_crawler.crawler.plugins.plugin import Plugin
-from pp_crawler.crawler.website import Website
 from pp_crawler.core.functions import (
     concat_files,
     gen_search_urls,
@@ -18,21 +16,27 @@ from pp_crawler.core.functions import (
     temp_descriptor,
     write_models,
 )
+from pp_crawler.crawler.plugins.plugin import Plugin
+from pp_crawler.crawler.website import Website
 
 
 def find_urls(
     args: tuple[str, str],
-    templates: tuple[Callable[[BeautifulSoup], str], ...],
+    templates: list[Callable[[Tag], list[str]]],
     cooldown: float = 0.0,
     random_cooldown: float = 0.0,
-) -> tuple[str, str, list[str]]:
+) -> tuple[str, str, set[str]]:
     page_url, keyword = args
     logger = get_logger()
+
+    if not page_url:
+        return keyword, page_url, set()
+
     soup = get_soup_from_url(page_url, cooldown, random_cooldown)
     if not soup:
         return keyword, page_url, set()
 
-    urls = set()
+    urls: set[str] = set()
     for template in templates:
         urls.update(template(soup))
 
@@ -46,10 +50,10 @@ class BaseAnalytics(Plugin):
     def __init__(
         self,
         search_url: str,
-        templates: tuple[Callable[[BeautifulSoup], list[str]], ...],
+        templates: list[Callable[[Tag], list[str]]],
         keywords: list[Optional[str]],
         pages: int,
-        descriptor: str,
+        descriptor: Path,
         cooldown: float = 0.0,
         random_cooldown: float = 0.0,
     ):

@@ -1,51 +1,84 @@
 import re
+from pathlib import Path
+from typing import Optional
 
-from bs4 import BeautifulSoup
+from bs4 import Tag
 
 from pp_crawler.crawler.plugins.base_market import BaseMarket
 
 
-def product_template(soup: BeautifulSoup) -> list[str]:
-    return [
-        f"https://www.walmart.com{item.get('href')}"
-        for item in soup.findAll("a", {"class": "product-title-link"})
-    ]
+def product_template(body: Tag) -> list[str]:
+    links = []
+    for item in body.find_all("a", {"class": "product-title-link"}):
+        if not isinstance(item, Tag):
+            continue
+
+        href = item.get("href")
+        if isinstance(href, str):
+            links.append(f"https://www.walmart.com{href}")
+
+    return links
 
 
-def template1(soup: BeautifulSoup) -> str:
+def template1(body: Tag) -> Optional[str]:
     is_manufacturer = re.compile(r"^manufacturer$", flags=re.IGNORECASE)
-    sanitize_label = re.compile(r"[^\w]|_", flags=re.IGNORECASE)
-    sanitize_value = re.compile(r"[^\w ]|_", flags=re.IGNORECASE)
+    sanitize_label = re.compile(r"[^\w]", flags=re.IGNORECASE)
+    sanitize_value = re.compile(r"[^\w ]", flags=re.IGNORECASE)
 
-    try:
-        div = soup.find("table", {"class": "product-specification-table"})
-        for tr in div.tbody.findChildren("tr"):
-            tds = tr.findChildren("td")
-            label = sanitize_label.sub("", tds[0].text)
-            if is_manufacturer.search(label):
-                manufacturer = tds[1].text
-                return sanitize_value.sub("", manufacturer).lower().trim()
+    table = body.find("table", {"class": "product-specification-table"})
+    if not isinstance(table, Tag):
+        return None
 
-    except (AttributeError, TypeError):
-        pass
+    tbody = table.find("tbody")
+    if not isinstance(tbody, Tag):
+        return None
+
+    for tr in tbody.find_all("tr"):
+        if not isinstance(tr, Tag):
+            continue
+
+        tds = tr.find_all("td")
+        if len(tds) < 2:
+            continue
+
+        label = sanitize_label.sub("", tds[0].text)
+        if is_manufacturer.fullmatch(label):
+            manufacturer = tds[1].text
+            return sanitize_value.sub("", manufacturer).lower().strip()
+
+    return None
 
 
-def template2(soup: BeautifulSoup) -> str:
+def template2(body: Tag) -> Optional[str]:
     is_brand = re.compile(r"^brand$", flags=re.IGNORECASE)
-    sanitize_label = re.compile(r"[^\w]|_", flags=re.IGNORECASE)
-    sanitize_value = re.compile(r"[^\w ]|_", flags=re.IGNORECASE)
+    sanitize_label = re.compile(r"[^\w]", flags=re.IGNORECASE)
+    sanitize_value = re.compile(r"[^\w ]", flags=re.IGNORECASE)
 
-    try:
-        div = soup.find("table", {"class": "product-specification-table"})
-        for tr in div.tbody.findChildren("tr"):
-            tds = tr.findChildren("td")
-            label = sanitize_label.sub("", tds[0].text)
-            if is_brand.search(label):
-                manufacturer = tds[1].text
-                return sanitize_value.sub("", manufacturer).lower().trim()
+    table = body.find("table", {"class": "product-specification-table"})
+    if not isinstance(table, Tag):
+        return None
 
-    except (AttributeError, TypeError):
-        pass
+    tbody = table.find("tbody")
+    if not isinstance(tbody, Tag):
+        return None
+
+    for tr in tbody.find_all("tr"):
+        if not isinstance(tr, Tag):
+            continue
+
+        tds = tr.find_all("td")
+        if not isinstance(tds, Tag):
+            continue
+
+        if len(tds) < 2:
+            continue
+
+        label = sanitize_label.sub("", tds[0].text)
+        if is_brand.fullmatch(label):
+            manufacturer = tds[1].text
+            return sanitize_value.sub("", manufacturer).lower().strip()
+
+    return None
 
 
 class Walmart(BaseMarket):
@@ -53,7 +86,7 @@ class Walmart(BaseMarket):
         self,
         keywords: list[str],
         pages: int,
-        descriptor: str,
+        descriptor: Path,
         cooldown: float = 0.0,
         random_cooldown: float = 0.0,
     ):
@@ -64,6 +97,7 @@ class Walmart(BaseMarket):
             [k.replace(" ", "+") for k in keywords],
             pages,
             descriptor,
+            30,
             cooldown,
             random_cooldown,
         )

@@ -1,13 +1,11 @@
-from hashlib import md5
 from functools import partial
+from hashlib import md5
 from multiprocessing.pool import Pool
 from pathlib import Path
 from typing import Optional
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
-from pp_crawler.crawler.modules.module import Module
-from pp_crawler.crawler.web.driver import Driver
 from pp_crawler.core.functions import (
     chunked,
     concat_files,
@@ -18,26 +16,34 @@ from pp_crawler.core.functions import (
     temp_descriptor,
     write_models,
 )
+from pp_crawler.crawler.modules.module import Module
+from pp_crawler.crawler.web.driver import Driver
 
 
 def download_and_hash(policy: str, html_dir: Path) -> tuple[str, Optional[str]]:
-    driver = Driver()
+    driver = Driver.spawn()
     driver.get(policy, remove_invisible=True)
 
     markup = driver.source()
     if not markup:
         return policy, None
 
-    soup = BeautifulSoup(markup, "lxml").find("body")
-    if not soup:
+    body = BeautifulSoup(markup, "lxml").find("body")
+    if not isinstance(body, Tag):
         return policy, None
+
+    pretty_body = body.prettify()
+
+    if isinstance(pretty_body, bytes):
+        pretty_body = pretty_body.decode("utf-8")
+
     content = (
         "<html>\n"
         "<head>\n"
         '\t<meta charset="utf-8"/>\n'
         "\t<title></title>\n"
         "</head>\n"
-        f"{soup.prettify().replace('\t', ' ' * 4)}\n"
+        f"{pretty_body.replace('\t', ' ' * 4)}\n"
         "</html>"
     )
     content_hash = md5(content.encode()).hexdigest()

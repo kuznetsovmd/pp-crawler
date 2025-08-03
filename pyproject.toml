@@ -1,0 +1,97 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+pp_crawler = "pp_crawler.main:main"
+
+[tool.uv]
+package = true
+
+[project]
+name = "pp_crawler"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "attrs==25.3.0",
+    "beautifulsoup4==4.13.4",
+    "certifi==2025.7.14",
+    "cffi==1.17.1",
+    "charset-normalizer==3.4.2",
+    "cryptography==45.0.5",
+    "fake-useragent==2.2.0",
+    "file-read-backwards==3.2.0",
+    "h11==0.16.0",
+    "httmock==1.4.0",
+    "http_request_randomizer==1.3.2",
+    "idna==3.10",
+    "lxml==6.0.0",
+    "outcome==1.3.0.post0",
+    "packaging==25.0",
+    "psutil==7.0.0",
+    "pycparser==2.22",
+    "pyOpenSSL==25.1.0",
+    "PySocks==1.7.1",
+    "python-dateutil==2.9.0.post0",
+    "python-dotenv==1.1.1",
+    "requests==2.32.4",
+    "selenium==4.34.2",
+    "six==1.17.0",
+    "sniffio==1.3.1",
+    "sortedcontainers==2.4.0",
+    "soupsieve==2.7",
+    "trio==0.30.0",
+    "trio-websocket==0.12.2",
+    "typing_extensions==4.14.1",
+    "urllib3==2.5.0",
+    "webdriver-manager==4.0.2",
+    "websocket-client==1.8.0",
+    "wsproto==1.2.0"
+]
+
+[dependency-groups]
+dev = [
+    "black==25.1.0",
+    "click==8.2.1",
+    "isort==6.0.1",
+    "mypy==1.17.1",
+    "mypy-extensions==1.1.0",
+    "packaging==25.0",
+    "pathspec==0.12.1",
+    "platformdirs==4.3.8",
+    "poethepoet==0.36.0",
+    "ruff==0.12.7",
+    "typing-extensions==4.14.1"
+]
+
+[tool.poe.tasks.isort]
+cmd = "isort ."
+
+[tool.poe.tasks.black]
+cmd = "black ."
+
+[tool.poe.tasks.ruff-format]
+cmd = "ruff format ."
+
+[tool.poe.tasks.ruff-check]
+cmd = "ruff check . --fix"
+
+[tool.poe.tasks.mypy]
+cmd = "mypy ."
+
+[tool.poe.tasks.format]
+sequence = ["isort", "black", "ruff-format"]
+
+[tool.poe.tasks.lint]
+sequence = ["ruff-check", "mypy"]
+
+[tool.poe.tasks.all]
+sequence = ["format", "lint"]

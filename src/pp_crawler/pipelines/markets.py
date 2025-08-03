@@ -1,4 +1,3 @@
-from typing import TypeVar
 from pp_crawler.core.config import Config
 from pp_crawler.core.link_matcher import LinkMatcher
 from pp_crawler.crawler.engines.google import GoogleEngine
@@ -12,10 +11,7 @@ from pp_crawler.crawler.plugins.walmart import Walmart
 from pp_crawler.crawler.product import Product
 
 
-T = TypeVar("T", bound=Module)
-
-
-def pipeline(c: Config) -> list[T]:
+def pipeline(c: Config) -> list[Module]:
     return [
         Urls(
             [
@@ -90,7 +86,11 @@ def pipeline(c: Config) -> list[T]:
         Policies(
             Product,
             c.path.descriptor_file,
-            LinkMatcher((r"privacy policy",)),
+            LinkMatcher(
+                [
+                    r"privacy policy",
+                ]
+            ),
         ),
         Downloader(
             Product,

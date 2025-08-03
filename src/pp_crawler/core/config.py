@@ -1,6 +1,6 @@
-from pathlib import Path
-from multiprocessing import cpu_count
 from dataclasses import dataclass, field
+from multiprocessing import cpu_count
+from pathlib import Path
 from typing import Any, Optional
 
 
@@ -32,10 +32,10 @@ class PathConfig:
 
 @dataclass
 class DriverConfig:
+    profile_path: Optional[Path]
     log_path: Path = field(default_factory=lambda: Path("./.geckodriver.log"))
     temp_dir: Path = field(default_factory=lambda: Path("./.tmp"))
     dotfile: Path = field(default_factory=lambda: Path("./.driver"))
-    profile_path: Optional[Path]
     log_level: int = 0
     private: bool = True
     no_cache: bool = True
@@ -63,8 +63,8 @@ class Config:
 
     @staticmethod
     def build(
-        path: Optional[dict[str, str]] = None,
-        driver: Optional[dict[str, Any]] = None,
+        path: dict[str, str],
+        driver: dict[str, Any],
         proc_count: int = -1,
         **kwargs,
     ) -> "Config":

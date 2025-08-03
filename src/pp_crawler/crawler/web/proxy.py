@@ -1,21 +1,14 @@
 import re
+from typing import Optional
+
 import requests
-
-from http_request_randomizer.requests.proxy.ProxyObject import Protocol
-from http_request_randomizer.requests.proxy.requestProxy import RequestProxy
-
-
-class Proxy:
-    _instance = None
-
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = _Proxy(*args, **kwargs)
-        return cls._instance
+from http_request_randomizer.requests.proxy.ProxyObject import Protocol  # type: ignore
+from http_request_randomizer.requests.proxy.requestProxy import (
+    RequestProxy,
+)  # type: ignore
 
 
-class _Proxy:
+class _ProxyInstance:
     regex = re.compile("^(.*):(.*)$")
     ip = re.compile(r"\d+\.\d+\.\d+\.\d+")
 
@@ -33,10 +26,12 @@ class _Proxy:
     @classmethod
     def parse_proxy(cls, proxy: str):
         p = cls.regex.match(proxy)
+        if p is None:
+            raise ValueError(f"Invalid proxy format: {proxy}")
         return p.group(1), int(p.group(2))
 
     def get_proxy(self):
-        from core.functions import get_logger
+        from pp_crawler.core.functions import get_logger
 
         logger = get_logger()
 
@@ -47,7 +42,7 @@ class _Proxy:
                 logger.info(f"Trying {p}")
                 proxy = {"http": f"http://{p}", "https": f"https://{p}"}
 
-                ip = _Proxy.ip.search(
+                ip = _ProxyInstance.ip.search(
                     requests.get("http://icanhazip.com/", proxies=proxy, timeout=2).text
                 )
                 if ip.group(0) is None:
@@ -67,3 +62,14 @@ class _Proxy:
             except IndexError:
                 logger.info("Loading more proxies")
                 self.proxies_list = self.req_proxy.get_proxy_list()
+
+
+class Proxy:
+    _instance: Optional[_ProxyInstance]
+
+    @classmethod
+    def spawn(cls, *args, **kwargs) -> _ProxyInstance:
+        if cls._instance:
+            return cls._instance
+        cls._instance = _ProxyInstance(*args, **kwargs)
+        return cls._instance

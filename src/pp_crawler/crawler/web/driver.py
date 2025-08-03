@@ -1,75 +1,34 @@
 import os
 import random
 import tempfile
+from pathlib import Path
 from time import sleep
-from typing import Any
+from typing import Any, Optional
 
-from webdriver_manager.firefox import GeckoDriverManager
 from selenium import webdriver
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.firefox.service import Service
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.common.by import By
 from selenium.common.exceptions import (
-    WebDriverException,
-    TimeoutException,
-    NoSuchElementException,
     NoAlertPresentException,
+    NoSuchElementException,
+    TimeoutException,
+    WebDriverException,
 )
+from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support.wait import WebDriverWait
+from webdriver_manager.firefox import GeckoDriverManager
 
-from pp_crawler.crawler.web.proxy import Proxy
 from pp_crawler.core.config import DriverConfig
 from pp_crawler.core.exceptions import CaptchaException
+from pp_crawler.crawler.web.proxy import Proxy
 
 
 def inject_js(filename: str) -> str:
-    import pathlib
-    module_dir = pathlib.Path(__file__).parent
+    module_dir = Path(__file__).parent
     js_path = module_dir / "javascript" / filename
     with open(js_path, "r", encoding="utf-8") as f:
         return f.read()
-
-
-class Driver:
-    _instance = None
-    _config = None
-
-    def __new__(cls, *args, **kwargs) -> "_DriverInstance":
-        if cls._instance is None:
-            cls._instance = _DriverInstance(cls._config)
-        return cls._instance
-
-    @classmethod
-    def set_config(cls, config: DriverConfig) -> None:
-        cls._config = config
-
-    @classmethod
-    def close(cls) -> None:
-        if cls._instance:
-            cls._instance.quit()
-            cls._instance = None
-
-    @classmethod
-    def check_installation(cls, conf: DriverConfig) -> None:
-        from pp_crawler.core.functions import get_logger
-
-        logger = get_logger()
-        logger.info("Checking installed driver")
-
-        try:
-            with open(conf.dotfile, "r") as f:
-                executable_path = f.read()
-                if executable_path:
-                    logger.info(f"Driver found at {executable_path}")
-                    return
-                raise FileNotFoundError
-
-        except FileNotFoundError:
-            logger.info("Driver is not found, installing...")
-            executable_path = GeckoDriverManager().install()
-            with open(conf.dotfile, "w") as f:
-                f.write(executable_path)
 
 
 class _DriverInstance:
@@ -104,7 +63,7 @@ class _DriverInstance:
             profile.set_preference("marionette.enabled", False)
 
         if conf.use_proxy:
-            proxy = Proxy(conf.proxies, conf.proxies_from_conf)
+            proxy = Proxy.spawn(conf.proxies, conf.proxies_from_conf)
             http, port = proxy.get_proxy()
 
             self.logger.info(f"Switching to {http}:{port} proxy")
@@ -185,7 +144,7 @@ class _DriverInstance:
                         By.XPATH, "//iframe[contains(@src, 'recaptcha')]"
                     )
                     captcha_error += 1
-                    raise CaptchaException("Captcha iframe detected")
+                    raise CaptchaException
                 except NoSuchElementException:
                     pass
 
@@ -230,7 +189,7 @@ class _DriverInstance:
             return False
 
     def find_element(self, by: str, value: str | None) -> WebElement:
-        self._driver.find_element(by, value)
+        return self._driver.find_element(by, value)
 
     def remove_invisible(self) -> None:
         self._driver.execute_script(self._sanitize)
@@ -239,3 +198,48 @@ class _DriverInstance:
         self._driver.quit()
         self._driver = None
         self.logger.info("Driver has been closed")
+
+
+class Driver:
+    _instance: Optional[_DriverInstance]
+    _config: Optional[DriverConfig]
+
+    @classmethod
+    def spawn(cls, *args, **kwargs) -> _DriverInstance:
+        if cls._instance:
+            return cls._instance
+        if cls._config:
+            cls._instance = _DriverInstance(cls._config)
+            return cls._instance
+        raise ValueError("Config is not set!")
+
+    @classmethod
+    def set_config(cls, config: DriverConfig) -> None:
+        cls._config = config
+
+    @classmethod
+    def close(cls) -> None:
+        if cls._instance:
+            cls._instance.quit()
+            cls._instance = None
+
+    @classmethod
+    def check_installation(cls, conf: DriverConfig) -> None:
+        from pp_crawler.core.functions import get_logger
+
+        logger = get_logger()
+        logger.info("Checking installed driver")
+
+        try:
+            with open(conf.dotfile, "r") as f:
+                executable_path = f.read()
+                if executable_path:
+                    logger.info(f"Driver found at {executable_path}")
+                    return
+                raise FileNotFoundError
+
+        except FileNotFoundError:
+            logger.info("Driver is not found, installing...")
+            executable_path = GeckoDriverManager().install()
+            with open(conf.dotfile, "w") as f:
+                f.write(executable_path)

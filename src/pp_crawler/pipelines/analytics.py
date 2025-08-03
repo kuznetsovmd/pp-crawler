@@ -1,4 +1,3 @@
-from typing import TypeVar
 from pp_crawler.core.config import Config
 from pp_crawler.core.link_matcher import LinkMatcher
 from pp_crawler.crawler.modules.downloader import Downloader
@@ -10,10 +9,7 @@ from pp_crawler.crawler.plugins.rambler import Rambler
 from pp_crawler.crawler.website import Website
 
 
-T = TypeVar("T", bound=Module)
-
-
-def pipeline(c: Config) -> list[T]:
+def pipeline(c: Config) -> list[Module]:
     return [
         Urls(
             [
@@ -31,7 +27,7 @@ def pipeline(c: Config) -> list[T]:
             Website,
             c.path.descriptor_file,
             LinkMatcher(
-                (
+                [
                     r"политика конфиденциальности",
                     r"пользовательское соглашение",
                     r"политика безопасности",
@@ -39,7 +35,7 @@ def pipeline(c: Config) -> list[T]:
                     r"конфиденциальность",
                     r"условия обработки персональных данных",
                     r"правовая информация",
-                )
+                ]
             ),
         ),
         Downloader(
