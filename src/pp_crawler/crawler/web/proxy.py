@@ -1,11 +1,11 @@
 import re
 from typing import Optional
 
-import requests
+import requests  # type: ignore
 from http_request_randomizer.requests.proxy.ProxyObject import Protocol  # type: ignore
-from http_request_randomizer.requests.proxy.requestProxy import (
+from http_request_randomizer.requests.proxy.requestProxy import (  # type: ignore
     RequestProxy,
-)  # type: ignore
+)
 
 
 class _ProxyInstance:
@@ -42,19 +42,12 @@ class _ProxyInstance:
                 logger.info(f"Trying {p}")
                 proxy = {"http": f"http://{p}", "https": f"https://{p}"}
 
-                ip = _ProxyInstance.ip.search(
-                    requests.get("http://icanhazip.com/", proxies=proxy, timeout=2).text
-                )
+                ip = _ProxyInstance.ip.search(requests.get("http://icanhazip.com/", proxies=proxy, timeout=2).text)
                 if ip.group(0) is None:
                     raise Exception
                 if ip.group(0) == self.get_ip():
                     raise Exception
-                if (
-                    requests.get(
-                        "http://google.com/", proxies=proxy, timeout=5
-                    ).status_code
-                    != 200
-                ):
+                if requests.get("http://google.com/", proxies=proxy, timeout=5).status_code != 200:
                     raise Exception
 
                 return self.parse_proxy(p)
@@ -65,7 +58,7 @@ class _ProxyInstance:
 
 
 class Proxy:
-    _instance: Optional[_ProxyInstance]
+    _instance: Optional[_ProxyInstance] = None
 
     @classmethod
     def spawn(cls, *args, **kwargs) -> _ProxyInstance:

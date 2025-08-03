@@ -10,7 +10,7 @@ class Item(ABC):
     id: Optional[int] = None
     page: Optional[str] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         cls = self.__class__
         if self.id is None:
             self.id = cls._counter
@@ -19,11 +19,11 @@ class Item(ABC):
             cls._counter = max(cls._counter, self.id + 1)
 
     @abstractmethod
-    def __hash__(self):
+    def __hash__(self) -> int:
         pass
 
     @abstractmethod
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         pass
 
     @abstractmethod

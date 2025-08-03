@@ -80,9 +80,7 @@ class Downloader(Module):
 
         p_cache = dict()
         for models in chunked(skipped_iter, self.chunk_size):
-            new_policies = [
-                m.policy for m in models if m.policy and m.policy not in p_cache
-            ]
+            new_policies = [m.policy for m in models if m.policy and m.policy not in p_cache]
 
             for policy, content_hash in pool.imap(worker_func, new_policies):
                 p_cache[policy] = content_hash

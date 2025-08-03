@@ -94,9 +94,7 @@ class BaseAnalytics(Plugin):
                 mode="a",
             )
 
-        for i, model in enumerate(
-            read_models(tmp1, Website), start=int(desc_id or 0) + 1
-        ):
+        for i, model in enumerate(read_models(tmp1, Website), start=int(desc_id or 0) + 1):
             model.id = i
             write_models(tmp2, [model], mode="a")
 

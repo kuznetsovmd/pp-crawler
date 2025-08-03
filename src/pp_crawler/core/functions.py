@@ -44,25 +44,19 @@ def load_last_id_page(path: Path) -> tuple[Optional[int], Optional[str]]:
 
 
 def temp_descriptor(descriptor: Path, suffix: str, label: str) -> Path:
-    temp = descriptor.with_name(
-        f".{descriptor.stem}.{suffix}.{label}{descriptor.suffix}"
-    )
+    temp = descriptor.with_name(f".{descriptor.stem}.{suffix}.{label}{descriptor.suffix}")
     temp.touch()
     return temp
 
 
-def concat_files(
-    input_files: list[Path], output_file: Path, buffer_size: int = 1024 * 1024
-) -> None:
+def concat_files(input_files: list[Path], output_file: Path, buffer_size: int = 1024 * 1024) -> None:
     with output_file.open("wb") as out_f:
         for file_path in input_files:
             with file_path.open("rb") as in_f:
                 shutil.copyfileobj(in_f, out_f, length=buffer_size)
 
 
-def get_soup_from_url(
-    url: str, cooldown: float = 0.0, random_cooldown: float = 0.0
-) -> Optional[Tag]:
+def get_soup_from_url(url: str, cooldown: float = 0.0, random_cooldown: float = 0.0) -> Optional[Tag]:
     driver = Driver.spawn()
     driver.get(url, cooldown=cooldown, random_cooldown=random_cooldown)
     markup = driver.source()
@@ -72,17 +66,13 @@ def get_soup_from_url(
     return body if isinstance(body, Tag) else None
 
 
-def gen_search_urls(
-    template: str, keywords: list[Optional[str]], pages: int
-) -> Iterator[tuple[str, Optional[str]]]:
+def gen_search_urls(template: str, keywords: list[Optional[str]], pages: int) -> Iterator[tuple[str, Optional[str]]]:
     for keyword in keywords:
         for page in range(1, pages + 1):
             yield template.format(keyword=keyword, page=page), keyword
 
 
-def skip_to(
-    iterable: Iterable[Any], value: Any = None, key: Callable[[Any], Any] = lambda x: x
-) -> Iterator[Any]:
+def skip_to(iterable: Iterable[Any], value: Any = None, key: Callable[[Any], Any] = lambda x: x) -> Iterator[Any]:
     if value is None:
         yield from iterable
         return
@@ -95,9 +85,7 @@ def skip_to(
         continue
 
 
-def chunked(
-    iterable: Iterable[Any], chunk_size: int = 64
-) -> Generator[list[Any], None, None]:
+def chunked(iterable: Iterable[Any], chunk_size: int = 64) -> Generator[list[Any], None, None]:
     chunk = []
     for item in iterable:
         chunk.append(item)
@@ -113,9 +101,7 @@ def init_files(paths: PathConfig) -> None:
         path.mkdir(parents=True, exist_ok=True)
     paths.descriptor_file.touch(exist_ok=True)
     if not paths.explicit_file.exists():
-        paths.explicit_file.write_text(
-            '{"policy": "https://mi.com/global/about/privacy/"}'
-        )
+        paths.explicit_file.write_text('{"policy": "https://mi.com/global/about/privacy/"}')
 
 
 def load_constructor(pipeline: str) -> Callable[[Config], list[Module]]:

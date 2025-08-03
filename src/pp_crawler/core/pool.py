@@ -46,9 +46,7 @@ def worker_destructor():
 
 def logger_initializer(queue):
     signal.signal(signal.SIGINT, signal.SIG_IGN)
-    f = logging.Formatter(
-        "%(asctime)s - [%(name)s] %(levelname)s: %(message)s", "%H:%M:%S"
-    )
+    f = logging.Formatter("%(asctime)s - [%(name)s] %(levelname)s: %(message)s", "%H:%M:%S")
     h = logging.StreamHandler(sys.stdout)
     h.addFilter(ExitFilter())
     h.setLevel(logging.INFO)

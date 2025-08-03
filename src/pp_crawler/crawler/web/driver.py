@@ -79,9 +79,7 @@ class _DriverInstance:
         if conf.private:
             profile.set_preference("browser.privatebrowsing.autostart", True)
 
-        profile.set_preference(
-            "general.useragent.override", random.choice(conf.user_agents)
-        )
+        profile.set_preference("general.useragent.override", random.choice(conf.user_agents))
         profile.set_preference("intl.accept_languages", "en-US, en")
         profile.update_preferences()
 
@@ -100,9 +98,7 @@ class _DriverInstance:
             self.logger.error(f"Dotfile with executable path not found: {conf.dotfile}")
             raise
 
-        service = Service(
-            executable_path=executable_path, log_output=str(conf.log_path)
-        )
+        service = Service(executable_path=executable_path, log_output=str(conf.log_path))
 
         driver = webdriver.Firefox(options=options, service=service)
         driver.set_page_load_timeout(conf.page_load_timeout)
@@ -140,9 +136,7 @@ class _DriverInstance:
                     pass
 
                 try:
-                    self._driver.find_element(
-                        By.XPATH, "//iframe[contains(@src, 'recaptcha')]"
-                    )
+                    self._driver.find_element(By.XPATH, "//iframe[contains(@src, 'recaptcha')]")
                     captcha_error += 1
                     raise CaptchaException
                 except NoSuchElementException:
@@ -160,9 +154,7 @@ class _DriverInstance:
                 timeout_error += 1
 
             except WebDriverException:
-                self.logger.warning(
-                    f"Web driver exception, potentially net error, retying {url}"
-                )
+                self.logger.warning(f"Web driver exception, potentially net error, retying {url}")
                 self._driver.quit()
                 self._driver = self.make_driver(self._conf)
                 network_error += 1
@@ -201,8 +193,8 @@ class _DriverInstance:
 
 
 class Driver:
-    _instance: Optional[_DriverInstance]
-    _config: Optional[DriverConfig]
+    _instance: Optional[_DriverInstance] = None
+    _config: Optional[DriverConfig] = None
 
     @classmethod
     def spawn(cls, *args, **kwargs) -> _DriverInstance:

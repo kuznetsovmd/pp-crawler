@@ -72,6 +72,25 @@ dev = [
     "typing-extensions==4.14.1"
 ]
 
+[tool.black]
+line-length = 120
+target-version = ["py313"]
+
+[tool.isort]
+profile = "black"
+line_length = 120
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+select = ["E", "F", "I"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = false
+disallow_untyped_defs = false
+
 [tool.poe.tasks.isort]
 cmd = "isort ."
 
