@@ -10,7 +10,6 @@ from pp_crawler.crawler.engines.engine import Engine
 from pp_crawler.crawler.web.driver import Driver
 
 
-
 class GoogleEngine(Engine):
     def __init__(self, similarity_threshold=0.6, cooldown=0.0, random_cooldown=0.0):
         super().__init__()
