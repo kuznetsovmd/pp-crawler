@@ -1,12 +1,8 @@
 # Custom
 .driver
+config*.json
 
-env.py
-
-/resources/datasets
-/resources/*/preprocessed.json
-/resources/*/models
-*.metadata
+/resources/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
