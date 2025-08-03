@@ -17,8 +17,8 @@ def main():
     sys.stderr = open(".stderr.log", "a", buffering=1)
 
     parser = argparse.ArgumentParser(
-        prog="privacy-sanitization",
-        description="Command line tool to control sanitization framework",
+        prog="pp_crawler",
+        description="Command line tool to control web crawling framework",
     )
     parser.add_argument(
         "--config",
