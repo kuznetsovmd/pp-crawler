@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 from bs4 import Tag
 
@@ -26,7 +27,7 @@ def template1(body: Tag) -> list[str]:
 class Mail(BaseAnalytics):
     def __init__(
         self,
-        keywords: list[str | None],
+        keywords: list[Optional[str]],
         pages: int,
         descriptor: Path,
         cooldown: float = 0.0,
